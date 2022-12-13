@@ -4,7 +4,7 @@ author: "lynde"
 date: '2022-12-07'
 output: pdf_document
 ---
-
+##Libaries libraries
 ```{r include=FALSE, eval=TRUE}
 library("knitr")
 library("janitor")     
@@ -15,31 +15,38 @@ library("tidyverse")
 library("afex")
 library("report")
 library("readr")
+library("qualtRics")
+
 theme_set(theme_classic())
 ```
 
 ## Data Review Motivation
 
-Here I describe the intended analysis
+We're trying to replicate the main finding which will involve running a series of linear models and ultimately a linear mixed effect model. First will be looking at effect of load on judgement and we shouldn't see significance. Then effect of load on utilitarian vs deontological choice each. This should, if replicated, demonstrate a significant effect on utilitarian judgments only. 
 
-using lmer 
 
+##Loading
 ```{r loading}
 setwd("~/F.Replications/Replications/Greene_Rep")
+
 pilot_a_data <- read_csv("Data/pilot_a_data.csv")
 View(pilot_a_data)
-```
 
+raw_data_pilot_a <- read_survey("pilot_a_data.csv", legacy = TRUE)
+view(raw_data_pilot_a)
+
+```
 ## Wringle Wrangle 
 
 Make new data frames that are tidy such that I can run the analysis more cleanly. 
-variables i need, the choices, yes/no, the RT
+variables I need, the choices, yes/no, the RT
 
 The names of the variables I need to pull 
 prolific_id
 vitamins /all the names of the questions (12, block 6 v 6 )
 timing page submit
 
+gonna do some select and long-ing. 
 
 ```{r wrangling, echo=FALSE}
 df.data = clean_names(pilot_a_data) 
@@ -47,4 +54,38 @@ df.data = clean_names(pilot_a_data)
 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Run some basic diagnostics
+
+Histogram of the RT load/no load
+Set the standard deviation for stun (at 2SD)
+ 
+```{r basics, echo=FALSE}
+
+
+
+```
+
+## Gimme some linear models please
+
+###First up the set of linear models that should not be significant. 
+
+
+```{r modeling, echo=FALSE}
+
+
+
+```
+
+###Glimmer limmer 
+```{r modeling, echo=FALSE}
+
+
+
+```
+
+Results
+
+
+
+
