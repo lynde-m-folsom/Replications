@@ -9,6 +9,7 @@ output:
     toc_float:
       collapsed: false
 ---
+
 <!-- Reproducibility reports should all use this template to standardize reporting across projects. These reports will be public supplementary materials that accompany the summary report(s) of the aggregate results. -->
 
 ## Introduction
@@ -19,7 +20,7 @@ In this project I will be reproducing the main finding of the paper, that is the
 
 ### Justification for choice of study
 
-I choose to replicate this study as it's a seminal piece that provides justification for thinking that utilitarian decision making is part of a slower cognitive process. This piece builds on previous work by Greene and will become a key finding for their work in model-free, model based moral decision making. Further, I am interestred in th 
+I choose to replicate this study as it's a seminal piece that provides justification for thinking that utilitarian decision making is part of a slower cognitive process. This piece builds on previous work by Greene and will become a key finding for their work in model-free, model based moral decision making. 
 
 ### Anticipated challenges
 
@@ -27,7 +28,7 @@ One challenge I anticipate in attempting to replicate this study is getting suff
 
 ### Links
 
-Project repository (on Github):
+Project repository (on Github): https://github.com/psych251/Greene2007.git
 
 Original paper (as hosted in your repo):
 
@@ -77,6 +78,9 @@ The analyses as specified in the analysis plan.
 
 *Side-by-side graph with original graph is ideal here*
 
+###Exploratory analyses
+
+Any follow-up analyses desired (not required).  
 
 ## Discussion
 

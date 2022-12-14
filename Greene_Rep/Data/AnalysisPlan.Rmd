@@ -24,6 +24,8 @@ theme_set(theme_classic())
 
 We're trying to replicate the main finding which will involve running a series of linear models and ultimately a linear mixed effect model. First will be looking at effect of load on judgement and we shouldn't see significance. Then effect of load on utilitarian vs deontological choice each. This should, if replicated, demonstrate a significant effect on utilitarian judgments only. 
 
+Original Author's findings
+"There was no main effect of load (F(1, 83.2) = 2.29, p = .13). There was a margin- ally significant main effect of judgment (F(1, 71.7) = 3.9, p = .052), with longer RT for utilitarian judgments (LS Means (SEM) ms: utilitarian = 6130 (207), non-utili- tarian = 5736 (221)). Critically, we observed the predicted interaction between load and judgment (F(1, 62.9) = 8.5, p = .005). (See Fig. 1.) Planned post hoc contrasts revealed a predicted increase in RT for utilitarian judgment under load (F(1, 106.3) = 9.8, p = .002; LS Means (SEM) ms: load = 6506 (238), no load = 5754 (241)), but no difference in RT for non-utilitarian judgment resulting from load (F(1, 169.6) = .10, p = .75; LS Means: load = 5691 (264), no load = 5781 (261)). Utilitarian judgments were slower than non-utilitarian judgments under load (p = .001), but there was no such effect in the absence of load (p = .91). This general pattern also held when item, rather than participant, was modeled as a random effect, although the results in this analysis were not as strong. There was no effect of load on judgment (v2(1, N = 82) = .24, p = .62), with 61% utilitarian judgments under load (95% CI: 57–66%) and 60% (95% CI: 55–64%) in the absence of load"
 
 ##Loading
 ```{r loading}
@@ -35,6 +37,9 @@ View(pilot_a_data)
 raw_data_pilot_a <- read_survey("pilot_a_data.csv", legacy = TRUE)
 view(raw_data_pilot_a)
 
+raw_data <- read_survey("Greene_08_Rep_121322.csv", legacy = TRUE)
+view(raw_data)
+raw_data <- clean_names(raw_data)
 ```
 ## Wringle Wrangle 
 
@@ -46,12 +51,46 @@ prolific_id
 vitamins /all the names of the questions (12, block 6 v 6 )
 timing page submit
 
+
+iv load 
+for each choice and load are my predictors for page submit 
+marginal effects lsmean 
+
 gonna do some select and long-ing. 
 
 ```{r wrangling, echo=FALSE}
-df.data = clean_names(pilot_a_data) 
+df.data <- select(raw_data, "response_id", 
+                  "prolific_id",
+                  "consent",
+                  "t1nl_vitamins", 
+                  "t2nl_submarine",
+                  "t3nl_sacrifice",
+                  "t4nl_mod_life_boat",
+                  "t5nl_law_arabia",
+                  "t6nl_euthanasia",
+                  "t1lc_cryingbaby",
+                  "t2lc_footbridge",
+                  "t3lc_modifiedbomb",
+                  "t4lc_modifiedsafari",
+                  "t5lc_sophieschoice",
+                  "t6lc_vaccinetest",
+                  "t1nl_timing_vitamins_page_submit",
+                  "t2nl_timing_sub_page_submit",
+                  "t3nl_timing_sac_page_submit",
+                  "t4nl_timing_modlb_page_submit",
+                  "t5nl_timing_lawarabi_page_submit",
+                  "t6nl_timing_euthan_page_submit",
+                  "t1lc_timing_cryb_page_submit",
+                  "t2lc_timing_foot_page_submit",
+                  "t3lc_timing_modbomb_page_submit",
+                  "t4lc_timing_modsafar_page_submit",
+                  "t5lc_timing_soph_page_submit",
+                  "t5lc_timing_vacctest_page_submit"
+                  )
 
-
+# longdf.data <- pivot_longer(df.data, cols = "consent"
+                  
+ 
 ```
 
 
@@ -61,7 +100,8 @@ Histogram of the RT load/no load
 Set the standard deviation for stun (at 2SD)
  
 ```{r basics, echo=FALSE}
-
+df.data %>% 
+  ggplot(aes(x=))
 
 
 ```
