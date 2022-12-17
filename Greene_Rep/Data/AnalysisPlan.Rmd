@@ -2,7 +2,10 @@
 title: "RepGreene_Data_analysis"
 author: "lynde"
 date: '2022-12-07'
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 ##Libaries libraries
 ```{r include=FALSE, eval=TRUE}
@@ -16,11 +19,17 @@ library("afex")
 library("report")
 library("readr")
 library("qualtRics")
-
-theme_set(theme_classic())
+library("reshape2")
+library("DataExplorer")
+library("sjPlot")
+library("sjmisc")
+library("ggplot2")
+library("modelbased")
+library("esquisse")
+theme_set(theme_bw())
 ```
 
-## Data Review Motivation
+##Motivation
 
 We're trying to replicate the main finding which will involve running a series of linear models and ultimately a linear mixed effect model. First will be looking at effect of load on judgement and we shouldn't see significance. Then effect of load on utilitarian vs deontological choice each. This should, if replicated, demonstrate a significant effect on utilitarian judgments only. 
 
@@ -29,17 +38,16 @@ Original Author's findings
 
 ##Loading
 ```{r loading}
-setwd("~/F.Replications/Replications/Greene_Rep")
+setwd("~/F.Replications/Replications/Greene_Rep/Data")
 
-pilot_a_data <- read_csv("Data/pilot_a_data.csv")
-View(pilot_a_data)
+# pilot_a_data <- read_csv("Data/pilot_a_data.csv")
+# View(pilot_a_data)
+# 
+# raw_data_pilot_a <- read_survey("pilot_a_data.csv", legacy = TRUE)
+# view(raw_data_pilot_a)
 
-raw_data_pilot_a <- read_survey("pilot_a_data.csv", legacy = TRUE)
-view(raw_data_pilot_a)
-
-raw_data <- read_survey("Greene_08_Rep_121322.csv", legacy = TRUE)
-view(raw_data)
-raw_data <- clean_names(raw_data)
+raw_data <- read_survey("Greene_08_Rep_121422.csv", legacy = TRUE) %>%
+  clean_names()
 ```
 ## Wringle Wrangle 
 
@@ -53,79 +61,282 @@ timing page submit
 
 
 iv load 
-for each choice and load are my predictors for page submit 
+for each choice and load are my predictors for "last click"
 marginal effects lsmean 
 
+"t1_l1_timing_vitamin_first_click",
+"t2_l1_timing_sub_first_click",     
+"t3_l1_timing_sac_first_click",
+"t4_l1_timing_modlb_first_click",
+"t5_l1_timing_lawara_first_click",
+"t6_l1_timing_euthan_first_click",
+"t1_l2_timing_cryb_first_click",
+"t2_l2_timing_foot_first_click",
+"t3_l2_timing_modbm_first_click",
+"t4_l2_timing_modsaf_first_click",
+"t5_l2_timing_soph_first_click",
+"t6_l2_timing_vacc_first_click"
+
+"t1_l1_vitamins",
+"t2_l1_sub",                   
+"t3_l1_sac",                    
+"t4_l1_modlb",                
+"t5_l1_lawara",             
+"t6_l1_euthan",                 
+"t1_l2_cryb",           
+"t2_l2_foot",                     
+"t3_l2_modbm",                 
+"t4_l2_modsaf",               
+"t5_l2_soph",                      
+"t6_l2_vacc",                      
 gonna do some select and long-ing. 
 
 ```{r wrangling, echo=FALSE}
-df.data <- select(raw_data, "response_id", 
+#grab the variables I want
+df.data <- select(raw_data,
                   "prolific_id",
-                  "consent",
-                  "t1nl_vitamins", 
-                  "t2nl_submarine",
-                  "t3nl_sacrifice",
-                  "t4nl_mod_life_boat",
-                  "t5nl_law_arabia",
-                  "t6nl_euthanasia",
-                  "t1lc_cryingbaby",
-                  "t2lc_footbridge",
-                  "t3lc_modifiedbomb",
-                  "t4lc_modifiedsafari",
-                  "t5lc_sophieschoice",
-                  "t6lc_vaccinetest",
-                  "t1nl_timing_vitamins_page_submit",
-                  "t2nl_timing_sub_page_submit",
-                  "t3nl_timing_sac_page_submit",
-                  "t4nl_timing_modlb_page_submit",
-                  "t5nl_timing_lawarabi_page_submit",
-                  "t6nl_timing_euthan_page_submit",
-                  "t1lc_timing_cryb_page_submit",
-                  "t2lc_timing_foot_page_submit",
-                  "t3lc_timing_modbomb_page_submit",
-                  "t4lc_timing_modsafar_page_submit",
-                  "t5lc_timing_soph_page_submit",
-                  "t5lc_timing_vacctest_page_submit"
+                  contains("l1"),
+                  contains("l2"),
+                  -contains("page_submit"),
+                  -contains("last_click"),
+                  -contains("click_count")) 
+#remove the pilot & qualtrics headers that I don't want
+df.data <- df.data %>% 
+  filter(prolific_id !="beth")%>% 
+  filter(prolific_id !="kate") %>% 
+  filter(prolific_id !="ImportId") %>% 
+  filter(prolific_id !="test001_JWB") %>% 
+  filter(prolific_id !="asdf") %>% 
+  filter(prolific_id != '{"ImportId":"QID33_TEXT"}') 
+
+#I think I'll use these later  
+conditions <- c("load" = "L2",
+                "no load" = "L1")
+choices <- c("utilitarian" = 1,
+             "not utilitarian" = 2)
+#make some variables of the names of variables.....
+variables <- variable.names(df.data)
+trialvar <- c("t1_l1_vitamins","t2_l1_sub",                   "t3_l1_sac", "t4_l1_modlb", "t5_l1_lawara", "t6_l1_euthan", "t1_l2_cryb", "t2_l2_foot","t3_l2_modbm","t4_l2_modsaf", "t5_l2_soph", "t6_l2_vacc")
+trialrt <- c("t1_l1_timing_vitamin_first_click", "t2_l1_timing_sub_first_click", "t3_l1_timing_sac_first_click", "t4_l1_timing_modlb_first_click", "t5_l1_timing_lawara_first_click", "t6_l1_timing_euthan_first_click", "t1_l2_timing_cryb_first_click", "t2_l2_timing_foot_first_click", "t3_l2_timing_modbm_first_click", "t4_l2_timing_modsaf_first_click", "t5_l2_timing_soph_first_click", "t6_l2_timing_vacc_first_click")
+
+#Tried to Melt rather than Pivot...
+
+# df.datalongval <- melt(
+#   df.data,
+#   "prolific_id",
+#   c(trialvar),
+#   na.rm = TRUE)
+# 
+# df.datalongrt <- melt(
+#   df.data,
+#   "prolific_id",
+#   c(trialrt),
+#   na.rm = TRUE)
+# 
+# df.datalongee <- left_join(df.datalongval, df.datalongrt, by = "prolific_id", keep = FALSE) %>% view()
+# 
+# df.datalongee1 <- df.datalongee %>% 
+#   mutate(condload = (variable.x ("l2")))
+# 
+# df.datalongee <-df.datalongee %>% 
+#   rename(trialname = variable.x) %>% 
+#   rename(choice = value.x) %>% 
+#   rename()
+
+#...I give up....
+
+df.datalong <- df.data %>% 
+  group_by("prolific_id") %>% 
+  pivot_longer(
+    cols = !"prolific_id",
+    names_to = c("trial", "load"),
+    names_sep = "_",
+    values_to = "choice"
+  ) 
+df.datalong <- df.datalong %>% 
+  filter(choice != "prolific_id" )
+
+#stuck, it's just slightly tooooo long
+```
+
+Got some help from Anna Xu to move the data around into where I want it.
+Anna noticed that the rows are every other so rather than trying to do another pivot she just kinda...moved the line around.
+
+```{r chunk by anna, echo=TRUE}
+odd.ind <- seq_len(nrow(df.datalong)) %% 2
+df.datalong.odds <- df.datalong[odd.ind == 1, ]
+df.datalong.evens <- df.datalong[odd.ind == 0, ]
+
+df.datalong.odds$bin.choice <- df.datalong.evens$choice
+
+df.datalong
+df.datalong.odds
+
+new.df.datalong <- df.datalong.odds
+
+df.datalong <-new.df.datalong %>% 
+  rename(rt = "bin.choice") %>% 
+  view()
+```
+YAY long!
+
+## Run some basic descriptives?
+
+We still need to do a little more organizing then peak at the data. 
+
+```{r basics, echo=FALSE}
+df.datalong <-df.datalong %>% 
+  mutate(rtnum = as.numeric(rt)) %>% 
+  mutate(choicenum = as.factor(choice)) 
+
+#histo of the RT
+df.datalong %>% 
+  ggplot(mapping = aes(rtnum)) +
+  geom_histogram(bins = 10)
+
+#lets tease out the histos from each condition, l1 is no load, l2 is load
+fig1 <- df.datalong %>% 
+  filter(load == "l1") %>% 
+  ggplot(mapping = aes(choice, rtnum))+
+  geom_violin(color = "purple", 
+                fill = "purple",
+              alpha = 0.9)+
+  labs(title = "no load")
+  
+fig2 <- df.datalong %>% 
+  filter(load == "l2") %>% 
+  ggplot(mapping = aes(choice, rtnum))+
+  geom_violin()+
+  labs(title = "load")
+
+fig1 
+fig2
+
+```
+Ever notice violins look like rorschach blots?
+
+### We should probably trim the RT
+From the violins above we can see that there's probably a ton of outlier RTs.
+
+```{r more descriptives, echo =TRUE}
+#trim my rts from the data & get standard devs
+sumsdfdatalong <- df.datalong %>% 
+  group_by(load) %>% 
+  summarize(rtmean = mean(rtnum),
+            stdrtmean = 2*sd(rtnum),
+            minrt = rtmean-stdrtmean,
+            maxrt = rtmean+stdrtmean)
+
+minrt <- sumsdfdatalong$minrt
+maxrt <- sumsdfdatalong$maxrt
+
+#lets trim this to two sd like original authors
+df.datalongtrim <- df.datalong %>% 
+  group_by(load) %>% 
+  filter(rtnum > minrt) %>% 
+  filter(rtnum < maxrt)
+
+#making a report bc why not
+#rep.dfdlongtrim <- create_report(df.datalongtrim)
+#rep.dfdlong <- create_report(df.datalong)
+# ^^^^ uncoment to run 
+
+#I want a good-game-plot as well
+df.datalongtrim %>% 
+  ggplot(mapping = aes(x = load,
+         y = rtnum,
+         fill = choicenum
+        ))+
+  geom_violin()+
+  labs(title = "Effect of Load and Moral Choice on RT",
+       x = "Load Conditions",
+       y = "Response Time Means (seconds)")+
+  scale_x_discrete(labels=c("l1" = "No Load",
+                            "l2" = "Load"))+
+  scale_fill_discrete(name="Choice type",
+                  labels=c("1" = "Utilitarian",
+                           "2" = "Not Utilitarian"))
+```
+
+## Model model model!
+
+Going to do three linear models.
+Always doing prolific id-- the participant-- as a random effect. 
+
+Model 1:Choice on RT
+
+Model 2:Load on RT
+
+Model 3:The big kahuna! Load * choice (on RT)!
+
+```{r model time, echo=TRUE}
+#modeling choice
+m1<- lmer(rtnum ~choicenum +(1|prolific_id),
+          data = df.datalongtrim)
+report(m1) 
+summary(m1)
+
+#modeling load 
+m2 <- lmer(rtnum ~load +(1|prolific_id),
+           data = df.datalongtrim)
+report(m2)
+summary(m2)
+
+#model the load*choice and rt
+m3 <- lmer(rtnum ~load *choicenum +(1|prolific_id),
+           data = df.datalongtrim)
+report(m3)
+summary(m3)
+
+#looking at model comparisons
+anova(m2, m3)
+anova(m1, m2)
+anova(m1, m3)
+
+#early peek at the model
+plot_model(m3, type = "int")
+
+#save model outputs to make a figure
+means <- estimate_means(m3)
+
+as.factor(means$load) #this will make the graphing easier
+
+#trying to use a different package to graph the model
+plot_model(m3, type = "int",
+           axis.title = "Mean RT (s)",
+           colors = "gs",
+           legend.title = "Choice Type",
+           title = "The effect of cognitive load on RT")
+
+#fuck it I'm gonna do ggplot 
+means %>% 
+  ggplot(mapping = aes(x = load,
+                       y = Mean,
+                       group = choicenum,
+                       color = choicenum
+                        ))+
+  geom_line(size = 1.5)+
+  geom_errorbar(aes(ymin=CI_low, ymax=CI_high), width=.05, size = 0.6)+
+  geom_point()+
+  labs(title = "Effect of Load and Moral Choice on RT",
+       x = "Load Conditions",
+       y = "Response Time Means (seconds)")+
+  scale_x_discrete(labels=c("l1" = "No Load",
+                            "l2" = "Load"))+
+  scale_colour_grey(name="Choice type",
+                  labels=c("1" = "Utilitarian",
+                           "2" = "Not Utilitarian"),
+                  start = 0.3,
+                  end = 0.7
                   )
 
-# longdf.data <- pivot_longer(df.data, cols = "consent"
-                  
+#tada!
+```
+
+Soooo this is not great huh. Seems like (a) rt significantly increases as a function of load irrespective of choice type. Frankly I'm not suprised. Further, we did not replicate the selective interference effect on utilitarian choices. Womp womp. 
  
+Time to write up the report!
+
+```{r, echo=F}
+sessionInfo()
 ```
-
-
-## Run some basic diagnostics
-
-Histogram of the RT load/no load
-Set the standard deviation for stun (at 2SD)
- 
-```{r basics, echo=FALSE}
-df.data %>% 
-  ggplot(aes(x=))
-
-
-```
-
-## Gimme some linear models please
-
-###First up the set of linear models that should not be significant. 
-
-
-```{r modeling, echo=FALSE}
-
-
-
-```
-
-###Glimmer limmer 
-```{r modeling, echo=FALSE}
-
-
-
-```
-
-Results
-
-
-
-
