@@ -12,57 +12,121 @@ output:
   pdf_document:
     toc: yes
     toc_depth: '3'
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 <!-- Reproducibility reports should all use this template to standardize reporting across projects. These reports will be public supplementary materials that accompany the summary report(s) of the aggregate results. -->
 
 ## Introduction
 
-In this project I will be reproducing the main finding of the paper, that is the effect of cognitive load on moral decision making. Greene et al, present 40 vignettes of moral decisions that require either deontological (rule based) decisions or utilitarian (consequence based) decisions. While there is no difference in response time (RT) for either, with the presence of load, utilitarian responses have a longer RT. The study is a within-between design so all participants are in both no load and load groups and the RT is taken and averaged by judgement (deontolgical/utilitarian). 
+In this project I will be reproducing the main finding of the paper,
+that is the effect of cognitive load on moral decision making. Greene et
+al, present 40 total vignettes of moral decisions that require either
+deontological (rule based) decisions or utilitarian (consequence based)
+decisions. While there is no difference in response time (RT) for
+either, with the presence of load, utilitarian responses have a longer
+RT on average. The study is a within-between design so all participants
+are in both no load and load groups and the RT is taken and averaged by
+judgement (deontolgical/utilitarian).
 
-**Clarify key analysis of interest here**  The main finding that I am looking to replicate is the effect of load on RT for utilitarian decision making. 
+The main finding that I am looking to replicate is the effect of load on
+RT for utilitarian decision making. This would be a mixed effects linear
+model looking at the effect of moral choices and load condition on the
+response time.
 
 ### Justification for choice of study
 
-I choose to replicate this study as it's a seminal piece that provides justification for thinking that utilitarian decision making is part of a slower cognitive process. This piece builds on previous work by Greene and will become a key finding for their work in model-free, model based moral decision making. 
+I choose to replicate this study as it's a seminal piece in moral
+psychology. Furthermore, I am interested in dual-process decision making
+theories and Greene's work was informative for "fast/slow" models. This
+piece builds on previous work by Greene in 2001 and will become a key
+finding for their work in model-free, model based moral decision making,
+Kanheman's "Thinking Fast Thinking Slow" and more.
 
 ### Anticipated challenges
 
-One challenge I anticipate in attempting to replicate this study is getting sufficient responses from participants as there are many vinnettes and I could imagine that there will be a great deal of satisficing.
+One challenge I anticipate in attempting to replicate this study is
+getting sufficient responses from participants as there are many
+vinnettes and I could imagine that there will be a great deal of
+satisficing.
+
+Further, I anticipate challenges with collecting similar response times.
 
 ### Links
 
-Project repository (on Github): 
+Project repository (on Github):
 
 Original paper (as hosted in your repo):
 
+<https://github.com/lynde-m-folsom/Replications/blob/main/Greene_Rep/Original_paper/Greene_Cohen_Cog2007.pdf>
+
 ## Methods
 
-### Description of the steps required to reproduce the results
+### How we intend to replicate
 
-Please describe all the steps necessary to reproduce the key result(s) of this study. 
+First, designing a task that is similar to the original. This
+replication will be conducted online so the first challenge is
+replicating the task design for presenting the stimuli. The dilemmas are
+presented as scrolling text across a screen with the cognitive load
+condition including a scrolling number line.
+
+Next, piloting the data to see that the response time (RT) is reasonable
+compared to the original paper. After gathering data, calculating the
+mean and standard deviations for load/no load conditions. Per original
+paper, RT is then trimmed to within 2standard deviations for each mean
+RT removing outliers. Finally a series of linear models to see if we can
+replicate the main effect in the paper.
+
+Model 1: Effect of choices on RT: In this model we're looking to see if
+utilitarian choices have a different RT compared to their non
+utilitarian counterparts.
+
+Model 2: Effect of load conditions on RT: This model to see if the
+cognitive load condition effects the RT. We predict it will but authors
+found no effect until running the mixed effects model.
+
+Model 3: Mixed effects model of choice and load on RT: This is the model
+that has the significant effects in the original paper wherein cognitive
+load selectively slows the RT of utilitarian choices. I predict this
+effect will not replicate.
 
 ### Differences from original study
 
-One major difference is that I will be conducting this study online rather than in person. This means my population will not be Princton undergraduates and may represent more diversity in age and other demographics. This may have a role in how people make moral decisions as well as things like reading speed and general response time. 
+One major difference is that I will be conducting this study online
+rather than in person. This means my population will not be Princeton
+undergraduates and may represent more diversity in age and other
+demographics. This may have a role in how people make moral decisions as
+well as things like reading speed and general response time.
 
-## Project Progress Check 1
+Another major difference is that for the original study 40 dilemmas were
+presented and only 12 were included for the results. In this study I
+will only present the 12 that were used for their findings. This
+shortens the study significantly but also, I hope, prevents satisficing.
+
+Finally, in making the task, the speed of the scrolling text and numbers
+is not replicable from the description in the paper. Using CSS code, for
+most devices the speed of the scrolling text should be hypothetically
+similar to the scrolling speed for the original study, however I cannot
+confirm that the speed is exactly 16character/s for every participant.
+During piloting, I intend to have a variety of devices such that I can
+confirm the speed of scrolling effect does not interfere with the
+capacity to read with the text.
 
 ### Measure of success
 
-Please describe the outcome measure for the success or failure of your reproduction and how this outcome will be computed.
-
-
-### Pipeline progress
-
-Earlier in this report, you described the steps necessary to reproduce the key result(s) of this study. Please describe your progress on each of these steps (e.g., data preprocessing, model fitting, model evaluation).
-
+The measure of success here will be weather we can replicate the main
+finding of cognitive load selectively interfering with utilitarian
+choices. This would be demonstrated as a significant result in a mixed
+effect model of load \* condition on RT with participants as a random
+effect.
 
 ## Results
 
 ### Data preparation
 
-Data preparation following the analysis plan.
+Data preparation following the analysis plan. #Library
 
 ```{r libraries and such, echo=FALSE, include=FALSE}
 library("knitr")
@@ -86,14 +150,31 @@ opts_chunk$set(comment = "",
                fig.show = "hold")
 ```
 
+### Setup
+
 ```{r setup, include=FALSE, message=FALSE}
 knitr::opts_knit$set(root.dir = "~/F.Replications/Replications/Greene_Rep/Data")
 
 # Disable summarize ungroup messages
 options(dplyr.summarise.inform = FALSE)
 ```
-	
-	
+
+### Bring in Data & organize it
+
+-   Read in data
+
+-   Select the variables (IVs/DVs)
+
+-   Remove pilot data & Qualtrics headers
+
+-   Pivot long
+
+-   Trim RT to 2SD of mean
+
+-   Look at the histogram of RT
+
+-   Look at the violins of choice/load RT
+
 ```{r include=T}
 #### Import data
 raw_data <- read_survey("Greene_08_Rep_121422.csv", legacy = TRUE) %>%
@@ -181,6 +262,24 @@ df.datalongtrim %>%
 
 ### Key analysis
 
+-   3 linear models (participant as random effect)
+
+    -   
+
+        a)  RT \~ Choice
+
+    -   
+
+        b)  RT \~ Load
+
+    -   
+
+        c)  RT \~ Load \* Choice
+
+-   Anova model comparisons
+
+-   Plot the results
+
 ```{r model time, echo=TRUE}
 #modeling choice
 m1<- lmer(rtnum ~choicenum +(1|prolific_id),
@@ -216,8 +315,8 @@ means %>%
                        group = choicenum,
                        color = choicenum
                         ))+
-  geom_line(size = 1.5)+
-  geom_errorbar(aes(ymin=CI_low, ymax=CI_high), width=.05, size = 0.6)+
+  geom_line(linewidth = 2.5)+
+  geom_errorbar(aes(ymin=CI_low, ymax=CI_high), width=.06, size = 1)+
   geom_point()+
   labs(title = "Effect of Load and Moral Choice on RT",
        x = "Load Conditions",
@@ -231,19 +330,54 @@ means %>%
                   end = 0.7)
 
 ```
-The analyses as specified in the analysis plan.  
 
-![Greene Fig1](F.Replications/Replications/Greene_Rep/greenefig1.png)
+### Compare to the original figure
 
+![Original author's figure](images/Greene_Fig1-01.png)
+
+```{r, include=F}
+fig1<-include_graphics("Figures/Greene_Fig1.png")
+fig1 
+```
 
 ## Discussion
 
 ### Summary of Reproduction Attempt
 
-Open the discussion section with a paragraph summarizing the primary result from the key analysis and assess whether you successfully reproduced it, partially reproduced it, or failed to reproduce it.  
-
-Unfortunately we were unsuccessful in reproducing the original paper's findings. 
+We found that RT significantly increases with the presence ense of load
+which confirms our hypothesis. However, this differs from the original
+paper which does not find this effect until running the mixed effect
+model. Further, we find that our RT mean is significantly different from
+the original RTs reported (original= 5.8s appx, current study = 52s).
+And finally we do not find a significant difference between
+utilitarian/non utilitarian choice under load.
 
 ### Commentary
 
-Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis of the dataset, (b) assessment of the meaning of the successful or unsuccessful reproducibility attempt - e.g., for a failure to reproduce the original findings, are the differences between original and present analyses ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the reproducibility attempt (if you contacted them).  None of these need to be long.
+Considering the failure to replicate the effect, follow up questions I
+have for this study are as follows.
+
+It is not clear to me that the "load" condition is a introducing
+cognitive load rather than visual interference. Other cognitive load
+literature often cite that tasks with conflicting sensory stimuli
+introduce sensory noise which I am not sure can be considered "cognitive
+load" (2015). A better load condition may be something like an auditory
+odd-ball paradigm or n-back task in which a different cognitive modality
+is being used simultaneously rather than dual sensory processing().
+
+Further, the scrolling text makes for a challenging task without
+introducing a load component, I would like to see how RT and judgment is
+effected by introducing scrolling text.
+
+The content of the dilemmas are very similar. I believe this introduces
+a possible meta-cognitive factor that can reduce the cognitive load of
+the task by responding in a "heuristic" kind of way.
+
+Finally, the dilemmas all follow a similar model based off the trolley
+problem but with extreme consequences. I'm unsure the ecological
+validity of running graphic moral dilemmas to represent moral choices.
+These dilemmas are based off of philosophical thought experiments
+designed to solicit specific hypothetical responses not to solicit
+realistic responding. By adding graphic elements to the task I'm unsure
+if we get closer to understanding the relationship between cognitive
+processes and moral decision making.
