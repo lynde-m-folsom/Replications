@@ -1,0 +1,249 @@
+---
+title: "Cognitive load selectively interferes with utilitarian moral judgment"
+author: Joshua D. Greene, Sylvia A. Morelli, Kelly Lowenberg, Leigh E. Nystrom, Jonathan
+  D. Cohen
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: no
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+<!-- Reproducibility reports should all use this template to standardize reporting across projects. These reports will be public supplementary materials that accompany the summary report(s) of the aggregate results. -->
+
+## Introduction
+
+In this project I will be reproducing the main finding of the paper, that is the effect of cognitive load on moral decision making. Greene et al, present 40 vignettes of moral decisions that require either deontological (rule based) decisions or utilitarian (consequence based) decisions. While there is no difference in response time (RT) for either, with the presence of load, utilitarian responses have a longer RT. The study is a within-between design so all participants are in both no load and load groups and the RT is taken and averaged by judgement (deontolgical/utilitarian). 
+
+**Clarify key analysis of interest here**  The main finding that I am looking to replicate is the effect of load on RT for utilitarian decision making. 
+
+### Justification for choice of study
+
+I choose to replicate this study as it's a seminal piece that provides justification for thinking that utilitarian decision making is part of a slower cognitive process. This piece builds on previous work by Greene and will become a key finding for their work in model-free, model based moral decision making. 
+
+### Anticipated challenges
+
+One challenge I anticipate in attempting to replicate this study is getting sufficient responses from participants as there are many vinnettes and I could imagine that there will be a great deal of satisficing.
+
+### Links
+
+Project repository (on Github): 
+
+Original paper (as hosted in your repo):
+
+## Methods
+
+### Description of the steps required to reproduce the results
+
+Please describe all the steps necessary to reproduce the key result(s) of this study. 
+
+### Differences from original study
+
+One major difference is that I will be conducting this study online rather than in person. This means my population will not be Princton undergraduates and may represent more diversity in age and other demographics. This may have a role in how people make moral decisions as well as things like reading speed and general response time. 
+
+## Project Progress Check 1
+
+### Measure of success
+
+Please describe the outcome measure for the success or failure of your reproduction and how this outcome will be computed.
+
+
+### Pipeline progress
+
+Earlier in this report, you described the steps necessary to reproduce the key result(s) of this study. Please describe your progress on each of these steps (e.g., data preprocessing, model fitting, model evaluation).
+
+
+## Results
+
+### Data preparation
+
+Data preparation following the analysis plan.
+
+```{r libraries and such, echo=FALSE, include=FALSE}
+library("knitr")
+library("janitor")     
+library("broom.mixed") 
+library("lme4")
+library("emmeans")
+library("tidyverse")
+library("afex")
+library("report")
+library("readr")
+library("qualtRics")
+library("reshape2")
+library("DataExplorer")
+library("sjPlot")
+library("sjmisc")
+library("ggplot2")
+library("modelbased")
+library("esquisse")
+opts_chunk$set(comment = "",
+               fig.show = "hold")
+```
+
+```{r setup, include=FALSE, message=FALSE}
+knitr::opts_knit$set(root.dir = "~/F.Replications/Replications/Greene_Rep/Data")
+
+# Disable summarize ungroup messages
+options(dplyr.summarise.inform = FALSE)
+```
+	
+	
+```{r include=T}
+#### Import data
+raw_data <- read_survey("Greene_08_Rep_121422.csv", legacy = TRUE) %>%
+  clean_names()
+#### Data exclusion / filtering
+#grab the variables I want
+df.data <- select(raw_data,
+                  "prolific_id",
+                  contains("l1"),
+                  contains("l2"),
+                  -contains("page_submit"),
+                  -contains("last_click"),
+                  -contains("click_count")) 
+#remove the pilot & qualtrics headers that I don't want
+df.data <- df.data %>% 
+  filter(prolific_id !="beth")%>% 
+  filter(prolific_id !="kate") %>% 
+  filter(prolific_id !="ImportId") %>% 
+  filter(prolific_id !="test001_JWB") %>% 
+  filter(prolific_id !="asdf") %>% 
+  filter(prolific_id != '{"ImportId":"QID33_TEXT"}') 
+#### Prepare data for analysis - create columns etc.
+df.datalong <- df.data %>% 
+  group_by("prolific_id") %>% 
+  pivot_longer(
+    cols = !"prolific_id",
+    names_to = c("trial", "load"),
+    names_sep = "_",
+    values_to = "choice") 
+
+df.datalong <- df.datalong %>% 
+  filter(choice != "prolific_id" )
+## Pesky row that Anna helped move
+odd.ind <- seq_len(nrow(df.datalong)) %% 2
+df.datalong.odds <- df.datalong[odd.ind == 1, ]
+df.datalong.evens <- df.datalong[odd.ind == 0, ]
+
+df.datalong.odds$bin.choice <- df.datalong.evens$choice
+
+df.datalong
+df.datalong.odds
+
+new.df.datalong <- df.datalong.odds
+
+df.datalong <-new.df.datalong %>% 
+  rename(rt = "bin.choice")
+
+df.datalong <-df.datalong %>% 
+  mutate(rtnum = as.numeric(rt)) %>% 
+  mutate(choicenum = as.factor(choice)) 
+
+## RT Trimming like in original paper
+
+sumsdfdatalong <- df.datalong %>% 
+  group_by(load) %>% 
+  summarize(rtmean = mean(rtnum),
+            stdrtmean = 2*sd(rtnum),
+            minrt = rtmean-stdrtmean,
+            maxrt = rtmean+stdrtmean)
+
+minrt <- sumsdfdatalong$minrt
+maxrt <- sumsdfdatalong$maxrt
+
+df.datalongtrim <- df.datalong %>% 
+  group_by(load) %>% 
+  filter(rtnum > minrt) %>% 
+  filter(rtnum < maxrt)
+
+## Lets see the data so far
+df.datalongtrim %>% 
+  ggplot(mapping = aes(x = load,
+         y = rtnum,
+         fill = choicenum
+        ))+
+  geom_violin()+
+  labs(x = "Load Conditions",
+       y = "Response Time (seconds)")+
+  scale_x_discrete(labels=c("l1" = "No Load",
+                            "l2" = "Load"))+
+  scale_fill_discrete(name="Choice type",
+                  labels=c("1" = "Utilitarian",
+                           "2" = "Not Utilitarian"))
+
+```
+
+### Key analysis
+
+```{r model time, echo=TRUE}
+#modeling choice
+m1<- lmer(rtnum ~choicenum +(1|prolific_id),
+          data = df.datalongtrim)
+report(m1) 
+summary(m1)
+
+#modeling load 
+m2 <- lmer(rtnum ~load +(1|prolific_id),
+           data = df.datalongtrim)
+report(m2)
+summary(m2)
+
+#model the load*choice and rt
+m3 <- lmer(rtnum ~load *choicenum +(1|prolific_id),
+           data = df.datalongtrim)
+report(m3)
+summary(m3)
+
+#looking at model comparisons
+anova(m2, m3)
+anova(m1, m2)
+anova(m1, m3)
+
+#save model outputs to make a figure
+means <- estimate_means(m3)
+
+as.factor(means$load) #this will make the graphing easier
+
+means %>% 
+  ggplot(mapping = aes(x = load,
+                       y = Mean,
+                       group = choicenum,
+                       color = choicenum
+                        ))+
+  geom_line(size = 1.5)+
+  geom_errorbar(aes(ymin=CI_low, ymax=CI_high), width=.05, size = 0.6)+
+  geom_point()+
+  labs(title = "Effect of Load and Moral Choice on RT",
+       x = "Load Conditions",
+       y = "Response Time Means (seconds)")+
+  scale_x_discrete(labels=c("l1" = "No Load",
+                            "l2" = "Load"))+
+  scale_colour_grey(name="Choice type",
+                  labels=c("1" = "Utilitarian",
+                           "2" = "Not Utilitarian"),
+                  start = 0.3,
+                  end = 0.7)
+
+```
+The analyses as specified in the analysis plan.  
+
+![Greene Fig1](F.Replications/Replications/Greene_Rep/greenefig1.png)
+
+
+## Discussion
+
+### Summary of Reproduction Attempt
+
+Open the discussion section with a paragraph summarizing the primary result from the key analysis and assess whether you successfully reproduced it, partially reproduced it, or failed to reproduce it.  
+
+Unfortunately we were unsuccessful in reproducing the original paper's findings. 
+
+### Commentary
+
+Add open-ended commentary (if any) reflecting (a) insights from follow-up exploratory analysis of the dataset, (b) assessment of the meaning of the successful or unsuccessful reproducibility attempt - e.g., for a failure to reproduce the original findings, are the differences between original and present analyses ones that definitely, plausibly, or are unlikely to have been moderators of the result, and (c) discussion of any objections or challenges raised by the current and original authors about the reproducibility attempt (if you contacted them).  None of these need to be long.
